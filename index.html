@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CrashMate Chatbot</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e3a8a);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            padding: 18px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            background: rgba(30,41,59,0.7);
+        }
+
+        .chat-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 14px;
+            margin: 8px 0;
+            border-radius: 14px;
+        }
+
+        .user {
+            background: #2563eb;
+            align-self: flex-end;
+        }
+
+        .bot {
+            background: #334155;
+            align-self: flex-start;
+        }
+
+        .input-container {
+            display: flex;
+            padding: 12px;
+            background: #1e293b;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            outline: none;
+        }
+
+        button {
+            margin-left: 10px;
+            padding: 12px;
+            border: none;
+            background: #2563eb;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+🤖 CrashMate<br>
+<span style="font-size:14px;">Mobile App Crash Analytics Assistant</span>
+</div>
+
+<div class="chat-container" id="chat"></div>
+
+<div class="input-container">
+    <input type="text" id="message" placeholder="Ask something..." onkeypress="handleKey(event)">
+    <button onclick="sendMessage()">Send</button>
+</div>
+
+<script>
+function handleKey(event) {
+    if (event.key === "Enter") {
+        sendMessage();
+    }
+}
+
+async function sendMessage() {
+    let input = document.getElementById("message");
+    let chat = document.getElementById("chat");
+
+    let userText = input.value.trim();
+    if (!userText) return;
+
+    chat.innerHTML += `<div class="message user">${userText}</div>`;
+    input.value = "";
+
+    let lower = userText.toLowerCase();
+
+    // Greeting
+    if (lower.includes("hi") || lower.includes("hello")) {
+        let intro = `
+👋 Hello! I am CrashMate 🤖
+
+You can ask me about:
+• App crashes  
+• Debugging  
+• Crash reports  
+• Firebase Crashlytics  
+
+Ask your question 👇
+`;
+        chat.innerHTML += `<div class="message bot">${intro}</div>`;
+        return;
+    }
+
+    // Loading
+    chat.innerHTML += `<div class="message bot" id="loading">Typing...</div>`;
+
+    let response = await fetch("/chat", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({message: userText})
+    });
+
+    let data = await response.json();
+
+    document.getElementById("loading").remove();
+
+    let formatted = data.reply
+        .replace(/\n/g, "<br>");
+
+    chat.innerHTML += `<div class="message bot">${formatted}</div>`;
+    chat.scrollTop = chat.scrollHeight;
+}
+</script>
+
+</body>
+</html>
